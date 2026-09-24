@@ -38,5 +38,20 @@
   "resumedFrom": "Resumed from {}",
   "completeCurrentLessonFirst": "Complete the current lesson first",
   "searchCourses": "Search courses...",
-  "noSearchResults": "No courses match your search"
+  "noSearchResults": "No courses match your search",
+  "lessonNotes": "Lesson Notes",
+  "lessonNotesHint": "Write your notes for this lesson here...",
+  "saveNote": "Save Note",
+  "noteSaved": "Saved",
+  "savingNote": "Saving...",
+  "noteLoadError": "Failed to load notes",
+  "noteSaveError": "Failed to save notes",
+  "noNotesYet": "No notes yet for this lesson. Add one above!",
+  "addNote": "Add Note",
+  "deleteNote": "Delete",
+  "characters": "characters",
+  "editNote": "Edit",
+  "save": "Save",
+  "cancel": "Cancel",
+  "edited": "Edited"
 }
