@@ -4,4 +4,6 @@ abstract class ProgressRepository {
   int getPosition(String lessonId);
   Future<void> markCompleted(String lessonId);
   bool isCompleted(String lessonId);
+  Future<void> savePlaybackSpeed(double speed);
+  double getPlaybackSpeed();
 }

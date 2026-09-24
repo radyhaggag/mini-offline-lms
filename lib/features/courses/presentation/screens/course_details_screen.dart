@@ -48,10 +48,13 @@ class CourseDetailsScreen extends StatelessWidget {
                 crossAxisAlignment: .stretch,
                 children: [
                   CourseHeader(course: course),
-                  if (course.sections.isEmpty)
+                  if (course.sections.isEmpty || course.totalLessonsCount == 0)
                     Padding(
                       padding: const .all(24),
-                      child: AppEmptyView(message: context.tr('noLessons')),
+                      child: AppEmptyView(
+                        message: context.tr('noLessons'),
+                        icon: Icons.video_library_outlined,
+                      ),
                     )
                   else
                     for (final section in course.sections)

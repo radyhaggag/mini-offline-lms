@@ -6,6 +6,8 @@ import '../../../../core/utils/extensions/duration_extensions.dart';
 import '../../domain/entities/lesson.dart';
 import 'lesson_status_badge.dart';
 
+import '../../../../core/widgets/app_snack_bar.dart';
+
 /// Interactive list tile representing a lesson with sequential unlock behavior.
 class LessonTile extends StatelessWidget {
   const LessonTile({super.key, required this.lesson, required this.onTap});
@@ -15,16 +17,7 @@ class LessonTile extends StatelessWidget {
 
   void _handleTap(BuildContext context) {
     if (lesson.isLocked) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(context.tr('lessonLocked')),
-            behavior: .floating,
-            duration: const Duration(seconds: 2),
-            shape: RoundedRectangleBorder(borderRadius: .circular(12)),
-          ),
-        );
+      AppSnackBar.showWarning(context, message: context.tr('lessonLocked'));
       return;
     }
     onTap(lesson);

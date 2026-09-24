@@ -51,9 +51,9 @@ abstract class CourseUnlockPolicy {
 
     for (final lesson in section.lessons) {
       final position = getPosition(lesson.id);
-      final completed = _isLessonCompleted(
-        lesson: lesson,
-        position: position,
+      final completed = isLessonCompleted(
+        positionSec: position,
+        durationSec: lesson.durationSec,
         isAlreadyCompleted: isCompleted(lesson.id),
       );
 
@@ -72,13 +72,14 @@ abstract class CourseUnlockPolicy {
     return section.copyWith(lessons: updatedLessons);
   }
 
-  static bool _isLessonCompleted({
-    required Lesson lesson,
-    required int position,
-    required bool isAlreadyCompleted,
+  /// Evaluates whether a lesson meets the completion threshold (90%).
+  static bool isLessonCompleted({
+    required int positionSec,
+    required int durationSec,
+    bool isAlreadyCompleted = false,
   }) {
     if (isAlreadyCompleted) return true;
-    return lesson.durationSec > 0 &&
-        position >= (lesson.durationSec * completionThreshold);
+    return durationSec > 0 &&
+        positionSec >= (durationSec * completionThreshold);
   }
 }

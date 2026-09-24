@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,6 +7,7 @@ import '../../../features/courses/presentation/cubit/course_details/course_detai
 import '../../../features/courses/presentation/cubit/courses_list/courses_list_cubit.dart';
 import '../../../features/courses/presentation/screens/course_details_screen.dart';
 import '../../../features/courses/presentation/screens/courses_screen.dart';
+import '../../../features/player/presentation/cubit/player_cubit.dart';
 import '../../../features/player/presentation/screens/lesson_player_screen.dart';
 import 'app_routes.dart';
 
@@ -35,7 +37,15 @@ abstract class AppRouter {
         builder: (context, state) {
           final courseId = state.pathParameters['courseId'] ?? '';
           final lessonId = state.pathParameters['lessonId'] ?? '';
-          return LessonPlayerScreen(courseId: courseId, lessonId: lessonId);
+          return BlocProvider(
+            create: (_) =>
+                sl<PlayerCubit>()..init(courseId: courseId, lessonId: lessonId),
+            child: LessonPlayerScreen(
+              key: ValueKey('player-$courseId-$lessonId'),
+              courseId: courseId,
+              lessonId: lessonId,
+            ),
+          );
         },
       ),
     ],

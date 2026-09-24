@@ -32,5 +32,9 @@
   "welcome": "مرحباً بك 👋",
   "welcomeSubtitle": "واصل رحلتك التعليمية في العلوم الطبية",
   "healthSciences": "علوم صحية",
-  "resume": "استئناف"
+  "resume": "استئناف",
+  "normalSpeed": "عادي (1x)",
+  "courseCompleted": "أكملت جميع دروس هذه الدورة! 🎉",
+  "resumedFrom": "تم الاستئناف من {}",
+  "completeCurrentLessonFirst": "أكمل الدرس الحالي أولاً"
 }

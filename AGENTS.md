@@ -447,6 +447,7 @@ At minimum **3 unit tests** for progress logic:
 - Direct `SharedPreferences` usage outside the progress data source
 - Network calls of any kind (fully offline app)
 - Hardcoded user-facing strings — use `context.tr(...)` always
+- Shorthand or cryptic single-letter variable names (e.g. `c`, `v`, `pos`, `dur`) — always use clean, descriptive names (`controller`, `value`, `positionSeconds`, `durationSeconds`). Decompose bloated files with `part`/`part of` instead of shortening variable names.
 
 ---
 

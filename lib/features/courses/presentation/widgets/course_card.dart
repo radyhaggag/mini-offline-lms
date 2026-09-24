@@ -78,38 +78,39 @@ class CourseCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Column(
-                    spacing: 6,
-                    children: [
-                      Row(
-                        mainAxisAlignment: .spaceBetween,
-                        children: [
-                          Text(
-                            context.tr('progress'),
-                            style: texts.bodySmall?.copyWith(
-                              color: colors.onSurfaceVariant,
+                  if (course.totalLessonsCount > 0)
+                    Column(
+                      spacing: 6,
+                      children: [
+                        Row(
+                          mainAxisAlignment: .spaceBetween,
+                          children: [
+                            Text(
+                              context.tr('progress'),
+                              style: texts.bodySmall?.copyWith(
+                                color: colors.onSurfaceVariant,
+                              ),
                             ),
-                          ),
-                          Text(
-                            percentText,
-                            style: texts.bodySmall?.copyWith(
-                              color: colors.primary,
-                              fontWeight: .bold,
+                            Text(
+                              percentText,
+                              style: texts.bodySmall?.copyWith(
+                                color: colors.primary,
+                                fontWeight: .bold,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      ClipRRect(
-                        borderRadius: .circular(4),
-                        child: LinearProgressIndicator(
-                          value: progressFraction,
-                          minHeight: 6,
-                          backgroundColor: colors.surfaceContainerHighest,
-                          color: colors.primary,
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
+                        ClipRRect(
+                          borderRadius: .circular(4),
+                          child: LinearProgressIndicator(
+                            value: progressFraction,
+                            minHeight: 6,
+                            backgroundColor: colors.surfaceContainerHighest,
+                            color: colors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ),

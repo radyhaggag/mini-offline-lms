@@ -20,4 +20,11 @@ class ProgressRepositoryImpl implements ProgressRepository {
 
   @override
   bool isCompleted(String lessonId) => _dataSource.isCompleted(lessonId);
+
+  @override
+  Future<void> savePlaybackSpeed(double speed) =>
+      _dataSource.savePlaybackSpeed(speed);
+
+  @override
+  double getPlaybackSpeed() => _dataSource.getPlaybackSpeed();
 }

@@ -8,6 +8,11 @@ analyzer:
   errors:
     invalid_annotation_target: ignore
 
+# Clean Code Rules:
+# - No single-letter or cryptic shorthand variables (e.g. c, v, pos, dur).
+# - Always use full, clear, descriptive names (e.g. controller, value, positionSeconds, durationSeconds).
+# - Decompose complex views using part files rather than compressing names.
+
 linter:
   rules:
     avoid_print: true
@@ -15,5 +20,7 @@ linter:
     prefer_const_constructors: true
     prefer_const_declarations: true
     prefer_final_locals: true
+    prefer_final_in_for_each: true
+    non_constant_identifier_names: true
     sort_child_properties_last: true
     use_build_context_synchronously: true

@@ -1,13 +1,20 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/config/di/service_locator.dart';
-import '../../../../core/utils/extensions/context_extensions.dart';
-import '../../data/data_sources/progress_data_source.dart';
+import '../../../../core/config/router/app_routes.dart';
+import '../../../../core/widgets/app_loader.dart';
+import '../cubit/player_cubit.dart';
+import '../cubit/player_state.dart';
+import '../widgets/lesson_info_section.dart';
+import '../widgets/next_lesson_button.dart';
+import '../widgets/video_error_view.dart';
+import '../widgets/video_player_view.dart';
 
-/// Temporary player screen with interactive simulation controls for testing unlock rules.
-class LessonPlayerScreen extends StatelessWidget {
+/// Screen presenting the offline video player, controls, and sequential next-lesson flow.
+class LessonPlayerScreen extends StatefulWidget {
   const LessonPlayerScreen({
     super.key,
     required this.courseId,
@@ -17,98 +24,126 @@ class LessonPlayerScreen extends StatelessWidget {
   final String courseId;
   final String lessonId;
 
-  Future<void> _simulateInProgress(BuildContext context) async {
-    final progressSource = sl<ProgressDataSource>();
-    await progressSource.savePosition(lessonId, 50);
-    if (context.mounted) {
-      context.pop();
-    }
+  @override
+  State<LessonPlayerScreen> createState() => _LessonPlayerScreenState();
+}
+
+class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
+  final _playerKey = GlobalKey<VideoPlayerViewState>();
+  bool _isFullscreen = false;
+
+  @override
+  void dispose() {
+    _restorePortrait();
+    super.dispose();
   }
 
-  Future<void> _simulateCompleted(BuildContext context) async {
-    final progressSource = sl<ProgressDataSource>();
-    await progressSource.savePosition(lessonId, 120);
-    await progressSource.markCompleted(lessonId);
-    if (context.mounted) {
-      context.pop();
+  void _restorePortrait() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  }
+
+  void _toggleFullscreen() {
+    setState(() => _isFullscreen = !_isFullscreen);
+    if (_isFullscreen) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    } else {
+      _restorePortrait();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colorScheme;
-    final texts = context.textTheme;
-
-    return Scaffold(
-      appBar: AppBar(title: Text(context.tr('lesson'))),
-      body: Center(
-        child: Padding(
-          padding: const .all(24),
-          child: Column(
-            mainAxisAlignment: .center,
-            spacing: 20,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: colors.primaryContainer.withValues(alpha: 0.6),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.play_arrow_rounded,
-                  size: 48,
-                  color: colors.primary,
-                ),
-              ),
-              Column(
-                spacing: 6,
-                children: [
-                  Text(
-                    lessonId,
-                    style: texts.titleLarge?.copyWith(fontWeight: .bold),
-                    textAlign: .center,
-                  ),
-                  Text(
-                    courseId,
-                    style: texts.bodyMedium?.copyWith(
-                      color: colors.onSurfaceVariant,
-                    ),
-                    textAlign: .center,
-                  ),
-                ],
-              ),
-              Card(
-                elevation: 0,
-                color: colors.surfaceContainerHighest.withValues(alpha: 0.35),
-                shape: RoundedRectangleBorder(
-                  borderRadius: .circular(16),
-                  side: BorderSide(
-                    color: colors.outlineVariant.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Padding(
-                  padding: const .all(16),
-                  child: Column(
-                    spacing: 12,
-                    children: [
-                      FilledButton.tonalIcon(
-                        onPressed: () => _simulateInProgress(context),
-                        icon: const Icon(Icons.timelapse_rounded),
-                        label: Text(context.tr('inProgress')),
-                      ),
-                      FilledButton.icon(
-                        onPressed: () => _simulateCompleted(context),
-                        icon: const Icon(Icons.check_circle_rounded),
-                        label: Text(context.tr('completed')),
-                      ),
-                    ],
+    return PopScope(
+      canPop: !_isFullscreen,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (_isFullscreen) _toggleFullscreen();
+      },
+      child: Scaffold(
+        backgroundColor: _isFullscreen ? Colors.black : null,
+        appBar: _isFullscreen
+            ? null
+            : AppBar(
+                title: BlocBuilder<PlayerCubit, PlayerState>(
+                  buildWhen: (prev, curr) => curr is PlayerLoaded,
+                  builder: (context, state) => Text(
+                    state is PlayerLoaded
+                        ? state.lesson.title
+                        : context.tr('lesson'),
                   ),
                 ),
               ),
-            ],
-          ),
+        body: BlocBuilder<PlayerCubit, PlayerState>(
+          builder: (context, state) => switch (state) {
+            PlayerInitial() || PlayerLoading() => const AppLoader(),
+            PlayerError(:final message) => VideoErrorView(
+              message: context.tr(message),
+              onRetry: () => context.read<PlayerCubit>().init(
+                courseId: widget.courseId,
+                lessonId: widget.lessonId,
+              ),
+            ),
+            PlayerLoaded() => _buildLoadedBody(context, state),
+          },
         ),
+      ),
+    );
+  }
+
+  Widget _buildLoadedBody(BuildContext context, PlayerLoaded state) {
+    final cubit = context.read<PlayerCubit>();
+    final playerView = VideoPlayerView(
+      key: _playerKey,
+      videoAssetPath: state.lesson.video,
+      lessonTitle: state.lesson.title,
+      initialPositionSec: state.initialPositionSec,
+      playbackSpeed: state.playbackSpeed,
+      isFullscreen: _isFullscreen,
+      onProgressUpdate: (positionSeconds, totalDurationSeconds) {
+        cubit.saveProgress(
+          positionSeconds: positionSeconds,
+          totalDurationSeconds: totalDurationSeconds,
+        );
+      },
+      onSpeedChanged: cubit.setPlaybackSpeed,
+      onToggleFullscreen: _toggleFullscreen,
+    );
+
+    if (_isFullscreen) {
+      return Center(child: playerView);
+    }
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: .stretch,
+        children: [
+          playerView,
+          LessonInfoSection(
+            course: state.course,
+            lesson: state.lesson,
+            isCompleted: state.isCompleted,
+          ),
+          NextLessonButton(
+            nextLesson: state.nextLesson,
+            isCurrentLessonCompleted: state.isCompleted,
+            onTap: (nextLesson) async {
+              await _playerKey.currentState?.pause();
+              if (context.mounted) {
+                await context.push(
+                  AppRoutes.lessonPlayerPath(widget.courseId, nextLesson.id),
+                );
+              }
+            },
+          ),
+        ],
       ),
     );
   }

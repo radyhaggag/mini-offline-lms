@@ -11,6 +11,10 @@ import '../../../features/courses/presentation/cubit/courses_list/courses_list_c
 import '../../../features/player/data/data_sources/progress_data_source.dart';
 import '../../../features/player/data/repositories/progress_repository_impl.dart';
 import '../../../features/player/domain/repositories/progress_repository.dart';
+import '../../../features/player/domain/use_cases/get_lesson_progress_use_case.dart';
+import '../../../features/player/domain/use_cases/get_next_lesson_use_case.dart';
+import '../../../features/player/domain/use_cases/save_lesson_progress_use_case.dart';
+import '../../../features/player/presentation/cubit/player_cubit.dart';
 import '../theme/theme_cubit.dart';
 
 final sl = GetIt.instance;
@@ -57,8 +61,27 @@ Future<void> initDependencies() async {
       progressRepository: sl(),
     ),
   );
+  sl.registerLazySingleton<GetLessonProgressUseCase>(
+    () => GetLessonProgressUseCase(sl()),
+  );
+  sl.registerLazySingleton<SaveLessonProgressUseCase>(
+    () => SaveLessonProgressUseCase(sl()),
+  );
+  sl.registerLazySingleton<GetNextLessonUseCase>(
+    () =>
+        GetNextLessonUseCase(coursesRepository: sl(), progressRepository: sl()),
+  );
 
   // Cubits
   sl.registerFactory(() => CoursesListCubit(sl()));
   sl.registerFactory(() => CourseDetailsCubit(sl()));
+  sl.registerFactory(
+    () => PlayerCubit(
+      getLessonProgressUseCase: sl(),
+      saveLessonProgressUseCase: sl(),
+      getNextLessonUseCase: sl(),
+      coursesRepository: sl(),
+      progressRepository: sl(),
+    ),
+  );
 }
