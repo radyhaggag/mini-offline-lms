@@ -1,28 +1,31 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/error/result.dart';
-import '../../../courses/domain/repositories/courses_repository.dart';
-import '../../domain/repositories/progress_repository.dart';
+import '../../../courses/domain/use_cases/get_course_details_use_case.dart';
 import '../../domain/use_cases/get_lesson_progress_use_case.dart';
 import '../../domain/use_cases/get_next_lesson_use_case.dart';
+import '../../domain/use_cases/get_playback_speed_use_case.dart';
 import '../../domain/use_cases/save_lesson_progress_use_case.dart';
+import '../../domain/use_cases/save_playback_speed_use_case.dart';
 import 'player_state.dart';
 
 /// Cubit managing lesson player data, watch progress, and speed preferences.
 class PlayerCubit extends Cubit<PlayerState> {
   PlayerCubit({
+    required this.getCourseDetailsUseCase,
     required this.getLessonProgressUseCase,
     required this.saveLessonProgressUseCase,
     required this.getNextLessonUseCase,
-    required this.coursesRepository,
-    required this.progressRepository,
+    required this.getPlaybackSpeedUseCase,
+    required this.savePlaybackSpeedUseCase,
   }) : super(const PlayerInitial());
 
+  final GetCourseDetailsUseCase getCourseDetailsUseCase;
   final GetLessonProgressUseCase getLessonProgressUseCase;
   final SaveLessonProgressUseCase saveLessonProgressUseCase;
   final GetNextLessonUseCase getNextLessonUseCase;
-  final CoursesRepository coursesRepository;
-  final ProgressRepository progressRepository;
+  final GetPlaybackSpeedUseCase getPlaybackSpeedUseCase;
+  final SavePlaybackSpeedUseCase savePlaybackSpeedUseCase;
 
   /// Loads course data, target lesson, last saved position, and next lesson.
   Future<void> init({
@@ -31,7 +34,7 @@ class PlayerCubit extends Cubit<PlayerState> {
   }) async {
     emit(const PlayerLoading());
 
-    final courseResult = await coursesRepository.getCourseById(courseId);
+    final courseResult = await getCourseDetailsUseCase(courseId);
     if (isClosed) return;
     switch (courseResult) {
       case Success(:final data):
@@ -39,14 +42,16 @@ class PlayerCubit extends Cubit<PlayerState> {
           for (final section in data.sections)
             for (final lesson in section.lessons) lesson,
         ];
-        final lesson = allLessons.where((l) => l.id == lessonId).firstOrNull;
+        final lesson = allLessons
+            .where((candidate) => candidate.id == lessonId)
+            .firstOrNull;
         if (lesson == null) {
           emit(const PlayerError('videoLoadError'));
           return;
         }
 
         final progress = getLessonProgressUseCase(lessonId);
-        final speed = progressRepository.getPlaybackSpeed();
+        final speed = getPlaybackSpeedUseCase();
         final nextLessonResult = await getNextLessonUseCase(
           courseId: courseId,
           currentLessonId: lessonId,
@@ -112,7 +117,7 @@ class PlayerCubit extends Cubit<PlayerState> {
     final currentState = state;
     if (currentState is! PlayerLoaded) return;
 
-    await progressRepository.savePlaybackSpeed(speed);
+    await savePlaybackSpeedUseCase(speed);
     if (isClosed) return;
     emit(currentState.copyWith(playbackSpeed: speed));
   }

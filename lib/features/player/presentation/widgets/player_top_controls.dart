@@ -25,7 +25,7 @@ class PlayerTopControls extends StatelessWidget {
         children: [
           IconButton(
             onPressed: onToggleFullscreen,
-            icon: Icon(Icons.arrow_back_rounded, color: colors.onSurface),
+            icon: Icon(Icons.adaptive.arrow_back, color: colors.onSurface),
           ),
           Expanded(
             child: Text(

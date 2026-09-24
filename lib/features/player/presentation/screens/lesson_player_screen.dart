@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/router/app_routes.dart';
+import '../../../../core/config/theme/app_colors.dart';
 import '../../../../core/widgets/app_loader.dart';
 import '../cubit/player_cubit.dart';
 import '../cubit/player_state.dart';
@@ -68,7 +69,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
         if (_isFullscreen) _toggleFullscreen();
       },
       child: Scaffold(
-        backgroundColor: _isFullscreen ? Colors.black : null,
+        backgroundColor: _isFullscreen ? AppColors.backgroundDark : null,
         appBar: _isFullscreen
             ? null
             : AppBar(

@@ -54,12 +54,14 @@ class PlayerControlsOverlay extends StatelessWidget {
             child: Builder(
               builder: (themedContext) {
                 final colors = themedContext.colorScheme;
-                final currentPos = seekingPosition ?? position;
-                final maxSec = duration.inSeconds.toDouble();
-                final currentSec = currentPos.inSeconds.toDouble().clamp(
-                  0.0,
-                  maxSec > 0 ? maxSec : 1.0,
-                );
+                final currentPosition = seekingPosition ?? position;
+                final totalDurationSeconds = duration.inSeconds.toDouble();
+                final currentPositionSeconds = currentPosition.inSeconds
+                    .toDouble()
+                    .clamp(
+                      0.0,
+                      totalDurationSeconds > 0 ? totalDurationSeconds : 1.0,
+                    );
 
                 return Container(
                   width: double.infinity,
@@ -111,10 +113,10 @@ class PlayerControlsOverlay extends StatelessWidget {
                           right: isFullscreen,
                           bottom: isFullscreen,
                           child: PlayerBottomControls(
-                            currentPos: currentPos,
+                            currentPosition: currentPosition,
                             duration: duration,
-                            currentSec: currentSec,
-                            maxSec: maxSec,
+                            currentPositionSeconds: currentPositionSeconds,
+                            totalDurationSeconds: totalDurationSeconds,
                             playbackSpeed: playbackSpeed,
                             isFullscreen: isFullscreen,
                             onSeekStart: onSeekStart,

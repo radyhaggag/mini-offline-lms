@@ -23,7 +23,7 @@ class CoursesRepositoryImpl implements CoursesRepository {
   Future<Result<Course>> getCourseById(String id) async {
     try {
       final courses = await _coursesDataSource.getCourses();
-      final course = courses.where((c) => c.id == id).firstOrNull;
+      final course = courses.where((course) => course.id == id).firstOrNull;
       if (course == null) {
         return const Failure('coursesLoadError');
       }

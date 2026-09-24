@@ -39,7 +39,7 @@ class LessonTile extends StatelessWidget {
         colors.primary,
         colors.primaryContainer.withValues(alpha: 0.8),
       ),
-      _ when lesson.status == LessonStatus.inProgress => (
+      _ when lesson.status == .inProgress => (
         Icons.play_arrow_rounded,
         colors.onTertiaryContainer,
         colors.tertiaryContainer,

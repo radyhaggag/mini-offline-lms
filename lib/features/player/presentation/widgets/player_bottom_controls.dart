@@ -7,10 +7,10 @@ import '../../../../core/utils/extensions/duration_extensions.dart';
 class PlayerBottomControls extends StatelessWidget {
   const PlayerBottomControls({
     super.key,
-    required this.currentPos,
+    required this.currentPosition,
     required this.duration,
-    required this.currentSec,
-    required this.maxSec,
+    required this.currentPositionSeconds,
+    required this.totalDurationSeconds,
     required this.playbackSpeed,
     required this.isFullscreen,
     required this.onSeekStart,
@@ -20,10 +20,10 @@ class PlayerBottomControls extends StatelessWidget {
     required this.onToggleFullscreen,
   });
 
-  final Duration currentPos;
+  final Duration currentPosition;
   final Duration duration;
-  final double currentSec;
-  final double maxSec;
+  final double currentPositionSeconds;
+  final double totalDurationSeconds;
   final double playbackSpeed;
   final bool isFullscreen;
   final VoidCallback onSeekStart;
@@ -60,11 +60,13 @@ class PlayerBottomControls extends StatelessWidget {
               thumbColor: colors.primary,
             ),
             child: Slider(
-              value: maxSec > 0 ? currentSec : 0.0,
-              max: maxSec > 0 ? maxSec : 1.0,
+              value: totalDurationSeconds > 0 ? currentPositionSeconds : 0.0,
+              max: totalDurationSeconds > 0 ? totalDurationSeconds : 1.0,
               onChangeStart: (_) => onSeekStart(),
-              onChanged: (val) => onSeekChange(Duration(seconds: val.round())),
-              onChangeEnd: (val) => onSeekEnd(Duration(seconds: val.round())),
+              onChanged: (targetSeconds) =>
+                  onSeekChange(Duration(seconds: targetSeconds.round())),
+              onChangeEnd: (targetSeconds) =>
+                  onSeekEnd(Duration(seconds: targetSeconds.round())),
             ),
           ),
           Row(
@@ -72,7 +74,10 @@ class PlayerBottomControls extends StatelessWidget {
             children: [
               Directionality(
                 textDirection: TextDirection.ltr,
-                child: Text(currentPos.toFormattedString(), style: timeStyle),
+                child: Text(
+                  currentPosition.toFormattedString(),
+                  style: timeStyle,
+                ),
               ),
               Text('/', style: timeStyle),
               Directionality(

@@ -13,7 +13,9 @@ import '../../../features/player/data/repositories/progress_repository_impl.dart
 import '../../../features/player/domain/repositories/progress_repository.dart';
 import '../../../features/player/domain/use_cases/get_lesson_progress_use_case.dart';
 import '../../../features/player/domain/use_cases/get_next_lesson_use_case.dart';
+import '../../../features/player/domain/use_cases/get_playback_speed_use_case.dart';
 import '../../../features/player/domain/use_cases/save_lesson_progress_use_case.dart';
+import '../../../features/player/domain/use_cases/save_playback_speed_use_case.dart';
 import '../../../features/player/presentation/cubit/player_cubit.dart';
 import '../theme/theme_cubit.dart';
 
@@ -21,15 +23,6 @@ final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
   final prefs = await SharedPreferences.getInstance();
-
-  // Clean up any previously seeded demo progress
-  if (prefs.containsKey('has_seeded_initial_progress_demo')) {
-    await prefs.remove('position_anatomy-s1-l1');
-    await prefs.remove('completed_anatomy-s1-l1');
-    await prefs.remove('position_anatomy-s1-l2');
-    await prefs.remove('has_seeded_initial_progress_demo');
-  }
-
   sl.registerLazySingleton<SharedPreferences>(() => prefs);
 
   // Theme Management
@@ -71,17 +64,24 @@ Future<void> initDependencies() async {
     () =>
         GetNextLessonUseCase(coursesRepository: sl(), progressRepository: sl()),
   );
+  sl.registerLazySingleton<GetPlaybackSpeedUseCase>(
+    () => GetPlaybackSpeedUseCase(sl()),
+  );
+  sl.registerLazySingleton<SavePlaybackSpeedUseCase>(
+    () => SavePlaybackSpeedUseCase(sl()),
+  );
 
   // Cubits
   sl.registerFactory(() => CoursesListCubit(sl()));
   sl.registerFactory(() => CourseDetailsCubit(sl()));
   sl.registerFactory(
     () => PlayerCubit(
+      getCourseDetailsUseCase: sl(),
       getLessonProgressUseCase: sl(),
       saveLessonProgressUseCase: sl(),
       getNextLessonUseCase: sl(),
-      coursesRepository: sl(),
-      progressRepository: sl(),
+      getPlaybackSpeedUseCase: sl(),
+      savePlaybackSpeedUseCase: sl(),
     ),
   );
 }

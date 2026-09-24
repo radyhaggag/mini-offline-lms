@@ -45,7 +45,9 @@ class GetNextLessonUseCase {
         for (final lesson in section.lessons) lesson,
     ];
 
-    final currentIndex = allLessons.indexWhere((l) => l.id == currentLessonId);
+    final currentIndex = allLessons.indexWhere(
+      (lesson) => lesson.id == currentLessonId,
+    );
     if (currentIndex == -1 || currentIndex >= allLessons.length - 1) {
       return null;
     }

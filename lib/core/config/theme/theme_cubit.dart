@@ -20,7 +20,7 @@ class ThemeCubit extends Cubit<ThemeMode> {
 
   /// Toggles between light and dark themes.
   Future<void> toggleTheme() async {
-    final nextMode = state == .dark ? ThemeMode.light : ThemeMode.dark;
+    final ThemeMode nextMode = state == .dark ? .light : .dark;
     emit(nextMode);
     await _prefs.setString(_themePrefKey, nextMode == .dark ? 'dark' : 'light');
   }

@@ -12,11 +12,12 @@ class Section {
 
   int get totalLessonsCount => lessons.length;
 
-  int get completedLessonsCount => lessons.where((l) => l.isCompleted).length;
+  int get completedLessonsCount =>
+      lessons.where((lesson) => lesson.isCompleted).length;
 
   /// Returns the first in-progress lesson in this section, if any.
   Lesson? get inProgressLesson =>
-      lessons.where((l) => l.status == .inProgress).firstOrNull;
+      lessons.where((lesson) => lesson.status == .inProgress).firstOrNull;
 
   Section copyWith({String? id, String? title, List<Lesson>? lessons}) {
     return Section(

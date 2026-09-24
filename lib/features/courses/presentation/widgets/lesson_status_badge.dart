@@ -28,7 +28,7 @@ class LessonStatusBadge extends StatelessWidget {
         colors.primaryContainer.withValues(alpha: 0.8),
         colors.primary,
       ),
-      _ when lesson.status == LessonStatus.inProgress => (
+      _ when lesson.status == .inProgress => (
         context.tr('inProgress'),
         Icons.timelapse_rounded,
         colors.tertiaryContainer.withValues(alpha: 0.8),
