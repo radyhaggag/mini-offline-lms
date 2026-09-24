@@ -25,6 +25,8 @@ class PlaybackSpeedSelector extends StatelessWidget {
     return showModalBottomSheet(
       context: context,
       showDragHandle: true,
+      isScrollControlled: true,
+      useSafeArea: true,
       builder: (sheetContext) => PlaybackSpeedSelector(
         currentSpeed: currentSpeed,
         onSpeedSelected: (speed) {
@@ -48,7 +50,7 @@ class PlaybackSpeedSelector extends StatelessWidget {
     final texts = context.textTheme;
 
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const .fromLTRB(16, 0, 16, 20),
         child: Column(
           mainAxisSize: .min,

@@ -6,6 +6,8 @@ import 'package:video_player/video_player.dart';
 import 'player_controls_overlay.dart';
 import 'video_error_view.dart';
 
+part 'video_player_view_overlay.dart';
+
 /// Single, unified video player widget managing playback, controls, and progress.
 class VideoPlayerView extends StatefulWidget {
   const VideoPlayerView({
@@ -20,11 +22,13 @@ class VideoPlayerView extends StatefulWidget {
     required this.onToggleFullscreen,
   });
 
-  final String videoAssetPath, lessonTitle;
+  final String videoAssetPath;
+  final String lessonTitle;
   final int initialPositionSec;
   final double playbackSpeed;
   final bool isFullscreen;
-  final void Function(int pos, int dur) onProgressUpdate;
+  final void Function(int positionSeconds, int totalDurationSeconds)
+  onProgressUpdate;
   final ValueChanged<double> onSpeedChanged;
   final VoidCallback onToggleFullscreen;
 
@@ -49,36 +53,49 @@ class VideoPlayerViewState extends State<VideoPlayerView> {
   }
 
   Future<void> _initController() async {
-    setState(() => _hasError = _isInitialized = false);
+    setState(() {
+      _hasError = false;
+      _isInitialized = false;
+    });
     try {
-      final c = VideoPlayerController.asset(widget.videoAssetPath);
-      await c.initialize();
-      if (!mounted || _isDeactivated) return unawaited(c.dispose());
-      final pos = widget.initialPositionSec, dur = c.value.duration.inSeconds;
-      if (pos > 0 && pos < dur) await c.seekTo(Duration(seconds: pos));
-      await c.setPlaybackSpeed(widget.playbackSpeed);
-      _controller = c..addListener(_videoListener);
+      final controller = VideoPlayerController.asset(widget.videoAssetPath);
+      await controller.initialize();
+      if (!mounted || _isDeactivated) {
+        return unawaited(controller.dispose());
+      }
+      final initialPosition = widget.initialPositionSec;
+      final totalDuration = controller.value.duration.inSeconds;
+      if (initialPosition > 0 && initialPosition < totalDuration) {
+        await controller.seekTo(Duration(seconds: initialPosition));
+      }
+      await controller.setPlaybackSpeed(widget.playbackSpeed);
+      controller.addListener(_videoListener);
+      _controller = controller;
       setState(() => _isInitialized = true);
-      await c.play();
+      await controller.play();
       _resetControlsTimer();
     } catch (_) {
-      if (mounted && !_isDeactivated) setState(() => _hasError = true);
+      if (mounted && !_isDeactivated) {
+        setState(() => _hasError = true);
+      }
     }
   }
 
-  void _updateProgress(VideoPlayerController c) {
-    final v = c.value;
-    widget.onProgressUpdate(v.position.inSeconds, v.duration.inSeconds);
+  void _updateProgress(VideoPlayerController controller) {
+    final value = controller.value;
+    widget.onProgressUpdate(value.position.inSeconds, value.duration.inSeconds);
   }
 
   void _videoListener() {
     if (_isDeactivated || !mounted) return;
-    final c = _controller;
-    if (c == null || !c.value.isInitialized) return;
-    final pos = c.value.position.inSeconds, dur = c.value.duration.inSeconds;
-    if ((pos - _lastSavedSec).abs() >= 3 || (dur > 0 && pos >= dur * 0.9)) {
-      _lastSavedSec = pos;
-      _updateProgress(c);
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+    final positionSeconds = controller.value.position.inSeconds;
+    final durationSeconds = controller.value.duration.inSeconds;
+    if ((positionSeconds - _lastSavedSec).abs() >= 3 ||
+        (durationSeconds > 0 && positionSeconds >= durationSeconds * 0.9)) {
+      _lastSavedSec = positionSeconds;
+      _updateProgress(controller);
     }
     if (mounted && !_isDeactivated) setState(() {});
   }
@@ -98,29 +115,35 @@ class VideoPlayerViewState extends State<VideoPlayerView> {
     if (_showControls) _resetControlsTimer();
   }
 
+  void onSeekingPositionChanged(Duration target) =>
+      setState(() => _seekingPosition = target);
+
   /// Pauses playback and reports current progress.
   Future<void> pause() async {
-    final c = _controller;
-    if (c != null && c.value.isPlaying) {
-      await c.pause();
-      _updateProgress(c);
+    final controller = _controller;
+    if (controller != null && controller.value.isPlaying) {
+      await controller.pause();
+      _updateProgress(controller);
       if (mounted && !_isDeactivated) setState(() => _showControls = true);
     }
   }
 
   void _onPlayPause() {
-    final c = _controller;
-    if (c == null) return;
-    if (c.value.isPlaying) return unawaited(pause());
-    c.play();
+    final controller = _controller;
+    if (controller == null) return;
+    if (controller.value.isPlaying) return unawaited(pause());
+    controller.play();
     _resetControlsTimer();
   }
 
   void _onSeekEnd(Duration target) {
     if (_isDeactivated || !mounted) return;
     setState(() => _seekingPosition = null);
-    final c = _controller?..seekTo(target);
-    if (c != null) _updateProgress(c);
+    final controller = _controller;
+    if (controller != null) {
+      controller.seekTo(target);
+      _updateProgress(controller);
+    }
     _resetControlsTimer();
   }
 
@@ -136,11 +159,11 @@ class VideoPlayerViewState extends State<VideoPlayerView> {
   void deactivate() {
     _isDeactivated = true;
     _controlsTimer?.cancel();
-    final c = _controller;
-    if (c != null && c.value.isInitialized) {
-      c.removeListener(_videoListener);
-      c.pause();
-      _updateProgress(c);
+    final controller = _controller;
+    if (controller != null && controller.value.isInitialized) {
+      controller.removeListener(_videoListener);
+      controller.pause();
+      _updateProgress(controller);
     }
     super.deactivate();
   }
@@ -164,37 +187,10 @@ class VideoPlayerViewState extends State<VideoPlayerView> {
 
   @override
   Widget build(BuildContext context) {
-    final c = _controller;
     if (_hasError) return VideoErrorPlaceholder(onRetry: _initController);
-    if (!_isInitialized || c == null) return const VideoLoadingPlaceholder();
-    return AspectRatio(
-      aspectRatio: c.value.aspectRatio > 0 ? c.value.aspectRatio : 16 / 9,
-      child: GestureDetector(
-        onTap: _toggleControls,
-        behavior: .opaque,
-        child: Stack(
-          fit: .expand,
-          children: [
-            VideoPlayer(c),
-            PlayerControlsOverlay(
-              isVisible: _showControls,
-              isPlaying: c.value.isPlaying,
-              position: c.value.position,
-              duration: c.value.duration,
-              playbackSpeed: widget.playbackSpeed,
-              isFullscreen: widget.isFullscreen,
-              title: widget.lessonTitle,
-              seekingPosition: _seekingPosition,
-              onPlayPause: _onPlayPause,
-              onSeekStart: () => _controlsTimer?.cancel(),
-              onSeekChange: (val) => setState(() => _seekingPosition = val),
-              onSeekEnd: _onSeekEnd,
-              onSpeedChanged: widget.onSpeedChanged,
-              onToggleFullscreen: widget.onToggleFullscreen,
-            ),
-          ],
-        ),
-      ),
-    );
+    if (!_isInitialized || _controller == null) {
+      return const VideoLoadingPlaceholder();
+    }
+    return _VideoPlayerViewOverlay(state: this);
   }
 }

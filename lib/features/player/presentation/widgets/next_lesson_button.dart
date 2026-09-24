@@ -10,10 +10,12 @@ class NextLessonButton extends StatelessWidget {
   const NextLessonButton({
     super.key,
     required this.nextLesson,
+    required this.isCurrentLessonCompleted,
     required this.onTap,
   });
 
   final Lesson? nextLesson;
+  final bool isCurrentLessonCompleted;
   final ValueChanged<Lesson> onTap;
 
   void _onLockedTap(BuildContext context) {
@@ -33,6 +35,9 @@ class NextLessonButton extends StatelessWidget {
     final lesson = nextLesson;
 
     if (lesson == null) {
+      if (!isCurrentLessonCompleted) {
+        return const SizedBox.shrink();
+      }
       return Card(
         elevation: 0,
         color: colors.primaryContainer.withValues(alpha: 0.35),

@@ -107,8 +107,11 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
       initialPositionSec: state.initialPositionSec,
       playbackSpeed: state.playbackSpeed,
       isFullscreen: _isFullscreen,
-      onProgressUpdate: (pos, dur) {
-        cubit.saveProgress(positionSeconds: pos, totalDurationSeconds: dur);
+      onProgressUpdate: (positionSeconds, totalDurationSeconds) {
+        cubit.saveProgress(
+          positionSeconds: positionSeconds,
+          totalDurationSeconds: totalDurationSeconds,
+        );
       },
       onSpeedChanged: cubit.setPlaybackSpeed,
       onToggleFullscreen: _toggleFullscreen,
@@ -130,11 +133,12 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
           ),
           NextLessonButton(
             nextLesson: state.nextLesson,
-            onTap: (next) async {
+            isCurrentLessonCompleted: state.isCompleted,
+            onTap: (nextLesson) async {
               await _playerKey.currentState?.pause();
               if (context.mounted) {
                 await context.push(
-                  AppRoutes.lessonPlayerPath(widget.courseId, next.id),
+                  AppRoutes.lessonPlayerPath(widget.courseId, nextLesson.id),
                 );
               }
             },
