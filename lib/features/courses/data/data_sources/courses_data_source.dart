@@ -8,6 +8,9 @@ import '../models/course_model.dart';
 abstract class CoursesDataSource {
   /// Loads all courses from local bundle or storage.
   Future<List<CourseModel>> getCourses();
+
+  /// Searches courses in local bundle or storage matching [query].
+  Future<List<CourseModel>> searchCourses(String query);
 }
 
 /// Offline implementation of [CoursesDataSource] reading bundled JSON.
@@ -28,5 +31,16 @@ class CoursesLocalDataSource implements CoursesDataSource {
         .whereType<Map<String, Object?>>()
         .map(CourseModel.fromJson)
         .toList();
+  }
+
+  @override
+  Future<List<CourseModel>> searchCourses(String query) async {
+    final courses = await getCourses();
+    final trimmedQuery = query.trim().toLowerCase();
+    if (trimmedQuery.isEmpty) return courses;
+    return courses.where((course) {
+      return course.title.toLowerCase().contains(trimmedQuery) ||
+          course.instructor.toLowerCase().contains(trimmedQuery);
+    }).toList();
   }
 }

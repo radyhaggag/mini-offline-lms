@@ -17,10 +17,15 @@ final class CoursesListLoading extends CoursesListState {
 }
 
 final class CoursesListLoaded extends CoursesListState {
-  const CoursesListLoaded({required this.courses, this.continueWatching});
+  const CoursesListLoaded({
+    required this.courses,
+    this.continueWatching,
+    this.searchQuery = '',
+  });
 
   final List<Course> courses;
   final ContinueWatching? continueWatching;
+  final String searchQuery;
 
   @override
   bool operator ==(Object other) =>
@@ -28,10 +33,12 @@ final class CoursesListLoaded extends CoursesListState {
       other is CoursesListLoaded &&
           runtimeType == other.runtimeType &&
           listEquals(courses, other.courses) &&
-          continueWatching == other.continueWatching;
+          continueWatching == other.continueWatching &&
+          searchQuery == other.searchQuery;
 
   @override
-  int get hashCode => Object.hash(Object.hashAll(courses), continueWatching);
+  int get hashCode =>
+      Object.hash(Object.hashAll(courses), continueWatching, searchQuery);
 }
 
 final class CoursesListError extends CoursesListState {
