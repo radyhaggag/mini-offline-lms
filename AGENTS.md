@@ -2,7 +2,7 @@
 
 ## Project
 Thaheen Mini Offline LMS — a Flutter screening task for a health-sciences learning platform.
-Stack: Flutter stable (3.47+), Dart 3.13+, Cubit, Clean Architecture (no use cases), go_router, get_it, SharedPreferences, easy_localization.
+Stack: Flutter stable (3.47+), Dart 3.13+, Cubit, Clean Architecture (with Use Cases & Domain Policies), go_router, get_it, SharedPreferences, easy_localization.
 Data: bundled JSON + local MP4 files. **No backend, no API calls.** Everything runs offline.
 Language: Arabic (primary) + English via `easy_localization`. Target: Android, iOS.
 
@@ -62,10 +62,10 @@ Prefer switch expressions over switch statements when producing a value.
 ```dart
 // Do
 Widget body = switch (state) {
-  CoursesLoading()                   => const AppLoader(),
-  CoursesError(:final message)       => AppErrorView(message: message),
-  CoursesLoaded(:final courses)      => CoursesList(courses: courses),
-  _                                  => const SizedBox.shrink(),
+  CoursesListLoading()                   => const AppLoader(),
+  CoursesListError(:final message)       => AppErrorView(message: message),
+  CoursesListLoaded(:final courses)      => CoursesList(courses: courses),
+  _                                      => const SizedBox.shrink(),
 };
 ```
 
@@ -110,25 +110,27 @@ lib/
   core/
     config/
       di/               ← service_locator.dart (get_it registration)
-      router/            ← go_router setup, AppRoutes path constants
-      theme/             ← AppTheme, colors, text styles
+      router/            ← go_router setup (BlocProviders at route level), AppRoutes constants
+      theme/             ← AppTheme, AppColors, ThemeCubit
     error/              ← Result<T> sealed class (Success / Failure)
     utils/
       extensions/        ← context extensions, duration formatting, etc.
-    widgets/             ← App-prefixed shared widgets (AppErrorView, AppLoader, etc.)
+    widgets/             ← App-prefixed shared widgets (AppErrorView, AppThemeToggle, AppLanguageToggle, etc.)
   features/
     courses/
       data/
         models/          ← CourseModel, SectionModel, LessonModel (extend entities, add fromJson)
         data_sources/    ← abstract CoursesDataSource + CoursesLocalDataSource
-        repositories/    ← CoursesRepositoryImpl
+        repositories/    ← CoursesRepositoryImpl (pure catalog data retrieval)
       domain/
-        entities/        ← Course, Section, Lesson (pure domain objects, base classes)
+        entities/        ← Course, Section, Lesson, ContinueWatching
+        policies/        ← CourseUnlockPolicy (pure 90% threshold & sequential unlock logic)
         repositories/    ← CoursesRepository (abstract interface)
+        use_cases/       ← GetCoursesUseCase, GetCourseDetailsUseCase
       presentation/
-        cubit/           ← CoursesCubit, state
+        cubit/           ← courses_list/ (CoursesListCubit), course_details/ (CourseDetailsCubit)
         screens/         ← CoursesScreen, CourseDetailsScreen
-        widgets/         ← CourseCard, SectionTile, LessonTile, etc.
+        widgets/         ← ContinueWatchingCard, CourseCard, CourseThumbnail, SectionCard, LessonTile, LessonStatusBadge
     player/
       data/
         data_sources/    ← abstract ProgressDataSource + ProgressLocalDataSource (SharedPreferences)
@@ -146,7 +148,10 @@ lib/
 ### Key decisions
 
 - **Models extend Entities.** Entities are clean domain objects. Models extend entities and add JSON parsing (`fromJson`/`toJson`). No `toEntity()` mappers — a Model IS an Entity.
-- **No use cases.** Cubits call repository interfaces directly. The repository interface is the abstraction boundary.
+- **Use Cases & Single Responsibility Principle (SRP).** Each Use Case represents a single user intent (`GetCoursesUseCase`, `GetCourseDetailsUseCase`) coordinating between repositories and domain policies.
+- **Domain Policies for Business Rules.** Rules such as 90% completion and sequential unlocking live in pure domain policies (`CourseUnlockPolicy`), keeping domain logic isolated from data sources, repositories, or UI widgets.
+- **Repositories are data-only.** Repositories only fetch and persist data. They do not calculate business rules or cross-pollinate with unrelated data sources.
+- **BlocProvider at Route level.** BlocProviders are injected inside `app_router.dart` route builders, keeping screen widgets clean and decoupling lifecycle management from the widget tree.
 - **Abstract data sources.** Each data source has an abstract interface for testability and dependency inversion, even with a single implementation.
 - **Result\<T\> for error handling.** Repositories catch exceptions and return `Failure(localizationKey)`. The key is a translation key — the **UI** localizes it via `context.tr(key)`. Cubits never catch — they pattern-match on Result.
 - **SharedPreferences for progress.** Key-value is sufficient for lesson positions and completion flags.
@@ -174,11 +179,11 @@ final class Failure<T> extends Result<T> {
 }
 ```
 
-### Repository — catches everything, returns Result with localization keys
+### Repository — catches exceptions, returns Result with localization keys
 
 ```dart
 class CoursesRepositoryImpl implements CoursesRepository {
-  CoursesRepositoryImpl(this._dataSource);
+  const CoursesRepositoryImpl(this._dataSource);
   final CoursesDataSource _dataSource;
 
   @override
@@ -186,28 +191,59 @@ class CoursesRepositoryImpl implements CoursesRepository {
     try {
       final courses = await _dataSource.getCourses();
       return Success(courses);                        // Models ARE Entities
-    } catch (e) {
-      return const Failure('coursesLoadError');        // localization key, not text
+    } catch (_) {
+      return const Failure('coursesLoadError');        // localization key
     }
   }
 }
 ```
 
-### Cubit — never catches, folds on Result
+### Use Case — coordinates data access with domain policy
 
 ```dart
-class CoursesCubit extends Cubit<CoursesState> {
-  CoursesCubit(this._repository) : super(const CoursesInitial());
-  final CoursesRepository _repository;
+class GetCoursesUseCase {
+  const GetCoursesUseCase({
+    required this.coursesRepository,
+    required this.progressRepository,
+  });
+
+  final CoursesRepository coursesRepository;
+  final ProgressRepository progressRepository;
+
+  Future<Result<List<Course>>> call() async {
+    final result = await coursesRepository.getCourses();
+    return switch (result) {
+      Success(:final data) => Success(
+          CourseUnlockPolicy.applyProgressToCourses(
+            courses: data,
+            isCompleted: progressRepository.isCompleted,
+            getPosition: progressRepository.getPosition,
+          ),
+        ),
+      Failure(:final message) => Failure(message),
+    };
+  }
+}
+```
+
+### Cubit — calls Use Case, never catches, folds on Result
+
+```dart
+class CoursesListCubit extends Cubit<CoursesListState> {
+  CoursesListCubit(this._getCoursesUseCase) : super(const CoursesListInitial());
+  final GetCoursesUseCase _getCoursesUseCase;
 
   Future<void> loadCourses() async {
-    emit(const CoursesLoading());
-    final result = await _repository.getCourses();
+    emit(const CoursesListLoading());
+    final result = await _getCoursesUseCase();
     switch (result) {
       case Success(:final data):
-        emit(CoursesLoaded(data));
+        emit(CoursesListLoaded(
+          courses: data,
+          continueWatching: ContinueWatching.fromCourses(data),
+        ));
       case Failure(:final message):
-        emit(CoursesError(message));              // passes key as-is
+        emit(CoursesListError(message));              // passes key as-is
     }
   }
 }
@@ -216,100 +252,60 @@ class CoursesCubit extends Cubit<CoursesState> {
 ### UI — localizes the error key
 
 ```dart
-// In the screen's BlocBuilder:
-CoursesError(:final message) => AppErrorView(
+CoursesListError(:final message) => AppErrorView(
   message: context.tr(message),                   // localized here
-  onRetry: () => context.read<CoursesCubit>().loadCourses(),
+  onRetry: () => context.read<CoursesListCubit>().loadCourses(),
 ),
-```
-
----
-
-## Data Sources — abstract + implementation
-
-```dart
-// Abstract — the contract
-abstract class CoursesDataSource {
-  Future<List<CourseModel>> getCourses();
-}
-
-// Implementation — reads bundled JSON
-class CoursesLocalDataSource implements CoursesDataSource {
-  @override
-  Future<List<CourseModel>> getCourses() async {
-    final jsonString = await rootBundle.loadString('assets/data/courses.json');
-    final data = jsonDecode(jsonString) as Map<String, Object?>;
-    // parse and return models
-  }
-}
-```
-
-```dart
-// Abstract
-abstract class ProgressDataSource {
-  Future<void> savePosition(String lessonId, int positionSeconds);
-  int getPosition(String lessonId);
-  Future<void> markCompleted(String lessonId);
-  bool isCompleted(String lessonId);
-}
-
-// Implementation — SharedPreferences
-class ProgressLocalDataSource implements ProgressDataSource {
-  ProgressLocalDataSource(this._prefs);
-  final SharedPreferences _prefs;
-
-  @override
-  Future<void> savePosition(String lessonId, int positionSeconds) async {
-    await _prefs.setInt('position_$lessonId', positionSeconds);
-  }
-
-  @override
-  int getPosition(String lessonId) => _prefs.getInt('position_$lessonId') ?? 0;
-
-  @override
-  Future<void> markCompleted(String lessonId) async {
-    await _prefs.setBool('completed_$lessonId', true);
-  }
-
-  @override
-  bool isCompleted(String lessonId) => _prefs.getBool('completed_$lessonId') ?? false;
-}
 ```
 
 ---
 
 ## Business Rules (Progress & Unlock)
 
-These rules live in the **repository layer**, not scattered across widgets or cubits.
+These rules live in the **Domain Layer** inside pure domain policies (`CourseUnlockPolicy`), not in repositories, cubits, or widgets:
 
-- A lesson is **completed at 90% watched** — position ≥ 0.9 × duration.
+- A lesson is **completed at 90% watched** — position $\ge$ 0.9 $\times$ duration.
 - Lessons unlock **sequentially** — a lesson is playable only if the previous one in the section is completed. The first lesson in each section is always unlocked.
-- **Course progress %** = completed lessons / total lessons × 100.
+- **Course progress %** = completed lessons / total lessons $\times$ 100.
 - **"Continue watching"** = the first lesson across all courses that is in-progress (has a saved position but is not completed).
 
 ---
 
 ## DI — Registration
 
-All registration in `core/config/di/service_locator.dart` (project is small enough for one file):
+All registration in `core/config/di/service_locator.dart`:
 
 ```dart
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
   final prefs = await SharedPreferences.getInstance();
+  sl.registerLazySingleton<SharedPreferences>(() => prefs);
+
+  // Theme Management
+  sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit(sl()));
 
   // Data Sources
-  sl.registerLazySingleton<CoursesDataSource>(() => CoursesLocalDataSource());
-  sl.registerLazySingleton<ProgressDataSource>(() => ProgressLocalDataSource(prefs));
+  sl.registerLazySingleton<CoursesDataSource>(() => const CoursesLocalDataSource());
+  sl.registerLazySingleton<ProgressDataSource>(() => ProgressLocalDataSource(sl()));
 
   // Repositories
   sl.registerLazySingleton<CoursesRepository>(() => CoursesRepositoryImpl(sl()));
   sl.registerLazySingleton<ProgressRepository>(() => ProgressRepositoryImpl(sl()));
 
+  // Use Cases
+  sl.registerLazySingleton<GetCoursesUseCase>(() => GetCoursesUseCase(
+    coursesRepository: sl(),
+    progressRepository: sl(),
+  ));
+  sl.registerLazySingleton<GetCourseDetailsUseCase>(() => GetCourseDetailsUseCase(
+    coursesRepository: sl(),
+    progressRepository: sl(),
+  ));
+
   // Cubits
-  sl.registerFactory(() => CoursesCubit(sl()));
-  sl.registerFactory(() => PlayerCubit(sl()));
+  sl.registerFactory(() => CoursesListCubit(sl()));
+  sl.registerFactory(() => CourseDetailsCubit(sl()));
 }
 ```
 
@@ -317,7 +313,7 @@ Future<void> initDependencies() async {
 
 ## Localization — easy_localization
 
-Translation files live in `lib/l10n/` (or `assets/l10n/`):
+Translation files live in `lib/l10n/`:
 
 ```json
 // ar.json
@@ -343,7 +339,6 @@ Text('الدورات')
 ## Routing — go_router
 
 ```dart
-// AppRoutes — path constants
 abstract class AppRoutes {
   static const courses = '/';
   static const courseDetails = '/course/:courseId';
@@ -355,6 +350,7 @@ abstract class AppRoutes {
 }
 ```
 
+- Declare `BlocProvider` at the route definition level in `app_router.dart`.
 - Never inline path strings in widgets. Always use `AppRoutes` helpers.
 - Parse path parameters in the screen or a typed route helper.
 
@@ -395,7 +391,7 @@ lib/features/<feature>/presentation/cubit/
 - Use `easy_localization` for all user-facing strings — never hardcode text.
 
 ### Shared Widgets
-- Prefix reusable widgets with `App` (e.g. `AppErrorView`, `AppLoader`).
+- Prefix reusable widgets with `App` (e.g. `AppErrorView`, `AppLoader`, `AppThemeToggle`, `AppLanguageToggle`).
 
 ---
 
@@ -409,37 +405,20 @@ lib/features/<feature>/presentation/cubit/
 
 ### Required tests (per task spec)
 At minimum **3 unit tests** for progress logic:
-1. **90% completion rule** — lesson marks as completed when position ≥ 90% of duration.
+1. **90% completion rule** — lesson marks as completed when position $\ge$ 90% of duration.
 2. **Sequential unlock rule** — lesson is locked until previous lesson is completed; first lesson is always unlocked.
-3. **Progress % calculation** — course progress = completed / total × 100.
-
-### Test Structure
-```
-test/
-  features/
-    courses/
-      data/
-        repositories/
-          courses_repository_impl_test.dart
-    player/
-      data/
-        repositories/
-          progress_repository_impl_test.dart
-      presentation/
-        cubit/
-          player_cubit_test.dart
-  helpers/
-    test_helpers.dart      ← shared mocks
-```
+3. **Progress % calculation** — course progress = completed / total $\times$ 100.
 
 ### Layer Isolation
 
 | Layer Under Test | What to Mock | What to Assert |
 |---|---|---|
-| Cubit | Repository interface | State emission sequence |
-| Repository Impl | Data Source interface | Model→Entity mapping, Result wrapping |
+| Cubit | Use Case | State emission sequence |
+| Use Case | Repository interfaces | Policy execution, data coordination, Result propagation |
+| Domain Policy | Nothing (pure Dart) | Deterministic unlock and completion math |
+| Repository Impl | Data Source interface | Model $\rightarrow$ Entity mapping, Result wrapping |
 | Data Source | SharedPreferences / rootBundle | Correct keys, parsing |
-| Model | Nothing (pure data) | `fromJson` / `toJson` / `toEntity` round-trip |
+| Model | Nothing (pure data) | `fromJson` / `toJson` round-trip |
 
 ### What NOT to Test
 - Private methods (test through public API)
