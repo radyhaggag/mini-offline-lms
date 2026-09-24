@@ -36,5 +36,7 @@
   "normalSpeed": "عادي (1x)",
   "courseCompleted": "أكملت جميع دروس هذه الدورة! 🎉",
   "resumedFrom": "تم الاستئناف من {}",
-  "completeCurrentLessonFirst": "أكمل الدرس الحالي أولاً"
+  "completeCurrentLessonFirst": "أكمل الدرس الحالي أولاً",
+  "searchCourses": "ابحث عن دورات...",
+  "noSearchResults": "لا توجد دورات تطابق بحثك"
 }

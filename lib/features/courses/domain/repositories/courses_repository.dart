@@ -8,4 +8,7 @@ abstract class CoursesRepository {
 
   /// Fetches a single course by its ID with populated progress and unlock state.
   Future<Result<Course>> getCourseById(String id);
+
+  /// Searches courses matching [query] with populated progress and unlock state.
+  Future<Result<List<Course>>> searchCourses(String query);
 }

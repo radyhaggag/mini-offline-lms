@@ -32,4 +32,14 @@ class CoursesRepositoryImpl implements CoursesRepository {
       return const Failure('coursesLoadError');
     }
   }
+
+  @override
+  Future<Result<List<Course>>> searchCourses(String query) async {
+    try {
+      final courses = await _coursesDataSource.searchCourses(query);
+      return Success(courses);
+    } catch (_) {
+      return const Failure('coursesLoadError');
+    }
+  }
 }

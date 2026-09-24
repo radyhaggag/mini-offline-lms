@@ -6,6 +6,7 @@ import '../../../features/courses/data/repositories/courses_repository_impl.dart
 import '../../../features/courses/domain/repositories/courses_repository.dart';
 import '../../../features/courses/domain/use_cases/get_course_details_use_case.dart';
 import '../../../features/courses/domain/use_cases/get_courses_use_case.dart';
+import '../../../features/courses/domain/use_cases/search_courses_use_case.dart';
 import '../../../features/courses/presentation/cubit/course_details/course_details_cubit.dart';
 import '../../../features/courses/presentation/cubit/courses_list/courses_list_cubit.dart';
 import '../../../features/player/data/data_sources/progress_data_source.dart';
@@ -48,6 +49,10 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<GetCoursesUseCase>(
     () => GetCoursesUseCase(coursesRepository: sl(), progressRepository: sl()),
   );
+  sl.registerLazySingleton<SearchCoursesUseCase>(
+    () =>
+        SearchCoursesUseCase(coursesRepository: sl(), progressRepository: sl()),
+  );
   sl.registerLazySingleton<GetCourseDetailsUseCase>(
     () => GetCourseDetailsUseCase(
       coursesRepository: sl(),
@@ -72,7 +77,7 @@ Future<void> initDependencies() async {
   );
 
   // Cubits
-  sl.registerFactory(() => CoursesListCubit(sl()));
+  sl.registerFactory(() => CoursesListCubit(sl(), sl()));
   sl.registerFactory(() => CourseDetailsCubit(sl()));
   sl.registerFactory(
     () => PlayerCubit(

@@ -36,5 +36,7 @@
   "normalSpeed": "Normal (1x)",
   "courseCompleted": "You completed all lessons in this course! 🎉",
   "resumedFrom": "Resumed from {}",
-  "completeCurrentLessonFirst": "Complete the current lesson first"
+  "completeCurrentLessonFirst": "Complete the current lesson first",
+  "searchCourses": "Search courses...",
+  "noSearchResults": "No courses match your search"
 }
