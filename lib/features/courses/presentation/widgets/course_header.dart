@@ -28,32 +28,43 @@ class CourseHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: .start,
       children: [
-        Container(
-          height: 200,
+        SizedBox(
+          height: 220,
           width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: .topCenter,
-              end: .bottomCenter,
-              colors: [
-                colors.surfaceContainerHighest.withValues(alpha: 0.5),
-                colors.surfaceContainerHighest.withValues(alpha: 0.15),
-              ],
-            ),
-          ),
-          child: Center(
-            child: Padding(
-              padding: const .symmetric(vertical: 12),
-              child: Image.asset(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.asset(
                 course.thumbnail,
-                fit: .contain,
-                errorBuilder: (_, _, _) => Icon(
-                  Icons.school_outlined,
-                  size: 64,
-                  color: colors.onSurfaceVariant,
+                fit: .cover,
+                width: double.infinity,
+                height: double.infinity,
+                alignment: .center,
+                errorBuilder: (_, _, _) => Container(
+                  color: colors.surfaceContainerHighest,
+                  child: Center(
+                    child: Icon(
+                      Icons.school_outlined,
+                      size: 64,
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
                 ),
               ),
-            ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: .topCenter,
+                    end: .bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      colors.surface.withValues(alpha: 0.65),
+                    ],
+                    stops: const [0.55, 1.0],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         Padding(
@@ -85,59 +96,62 @@ class CourseHeader extends StatelessWidget {
                   ),
                 ],
               ),
-              Container(
-                padding: const .all(14),
-                decoration: BoxDecoration(
-                  color: colors.surfaceContainerHighest.withValues(alpha: 0.35),
-                  borderRadius: .circular(16),
-                  border: Border.all(
-                    color: colors.outlineVariant.withValues(alpha: 0.3),
+              if (course.totalLessonsCount > 0)
+                Container(
+                  padding: const .all(14),
+                  decoration: BoxDecoration(
+                    color: colors.surfaceContainerHighest.withValues(
+                      alpha: 0.35,
+                    ),
+                    borderRadius: .circular(16),
+                    border: Border.all(
+                      color: colors.outlineVariant.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Column(
+                    spacing: 10,
+                    children: [
+                      Row(
+                        mainAxisAlignment: .spaceBetween,
+                        children: [
+                          Row(
+                            spacing: 6,
+                            children: [
+                              Icon(
+                                Icons.play_lesson_outlined,
+                                size: 16,
+                                color: colors.primary,
+                              ),
+                              Text(
+                                lessonsCountText,
+                                style: texts.bodySmall?.copyWith(
+                                  color: colors.onSurface,
+                                  fontWeight: .w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            percentText,
+                            style: texts.bodySmall?.copyWith(
+                              color: colors.primary,
+                              fontWeight: .bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      ClipRRect(
+                        borderRadius: .circular(4),
+                        child: LinearProgressIndicator(
+                          value: progressFraction,
+                          minHeight: 8,
+                          backgroundColor: colors.surfaceContainerHighest,
+                          color: colors.primary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Column(
-                  spacing: 10,
-                  children: [
-                    Row(
-                      mainAxisAlignment: .spaceBetween,
-                      children: [
-                        Row(
-                          spacing: 6,
-                          children: [
-                            Icon(
-                              Icons.play_lesson_outlined,
-                              size: 16,
-                              color: colors.primary,
-                            ),
-                            Text(
-                              lessonsCountText,
-                              style: texts.bodySmall?.copyWith(
-                                color: colors.onSurface,
-                                fontWeight: .w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          percentText,
-                          style: texts.bodySmall?.copyWith(
-                            color: colors.primary,
-                            fontWeight: .bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    ClipRRect(
-                      borderRadius: .circular(4),
-                      child: LinearProgressIndicator(
-                        value: progressFraction,
-                        minHeight: 8,
-                        backgroundColor: colors.surfaceContainerHighest,
-                        color: colors.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
         ),

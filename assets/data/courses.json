@@ -99,6 +99,13 @@
           ]
         }
       ]
+    },
+    {
+      "id": "pathology-101",
+      "title": "مقدمة في علم الأمراض",
+      "instructor": "د. هدى منصور",
+      "thumbnail": "assets/images/anatomy.png",
+      "sections": []
     }
   ]
 }

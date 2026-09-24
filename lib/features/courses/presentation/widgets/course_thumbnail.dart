@@ -20,32 +20,40 @@ class CourseThumbnail extends StatelessWidget {
     final colors = context.colorScheme;
     final texts = context.textTheme;
 
-    return Container(
-      height: 170,
+    return SizedBox(
+      height: 180,
       width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: .topCenter,
-          end: .bottomCenter,
-          colors: [
-            colors.surfaceContainerHighest.withValues(alpha: 0.45),
-            colors.surfaceContainerHighest.withValues(alpha: 0.15),
-          ],
-        ),
-      ),
       child: Stack(
+        fit: StackFit.expand,
         children: [
-          Center(
-            child: Padding(
-              padding: const .symmetric(vertical: 8),
-              child: Image.asset(
-                course.thumbnail,
-                fit: .contain,
-                errorBuilder: (_, _, _) => Icon(
+          Image.asset(
+            course.thumbnail,
+            fit: .cover,
+            width: double.infinity,
+            height: double.infinity,
+            alignment: .center,
+            errorBuilder: (_, _, _) => Container(
+              color: colors.surfaceContainerHighest,
+              child: Center(
+                child: Icon(
                   Icons.school_outlined,
                   size: 56,
                   color: colors.onSurfaceVariant,
                 ),
+              ),
+            ),
+          ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: .topCenter,
+                end: .bottomCenter,
+                colors: [
+                  colors.surface.withValues(alpha: 0.3),
+                  Colors.transparent,
+                  colors.surface.withValues(alpha: 0.45),
+                ],
+                stops: const [0.0, 0.45, 1.0],
               ),
             ),
           ),
@@ -71,38 +79,39 @@ class CourseThumbnail extends StatelessWidget {
               ),
             ),
           ),
-          Positioned.directional(
-            textDirection: Directionality.of(context),
-            bottom: 12,
-            end: 12,
-            child: Container(
-              padding: const .symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: colors.surface.withValues(alpha: 0.9),
-                borderRadius: .circular(12),
-                border: Border.all(
-                  color: colors.outlineVariant.withValues(alpha: 0.3),
+          if (course.totalLessonsCount > 0)
+            Positioned.directional(
+              textDirection: Directionality.of(context),
+              bottom: 12,
+              end: 12,
+              child: Container(
+                padding: const .symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: colors.surface.withValues(alpha: 0.9),
+                  borderRadius: .circular(12),
+                  border: Border.all(
+                    color: colors.outlineVariant.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  spacing: 4,
+                  children: [
+                    Icon(
+                      Icons.play_lesson_outlined,
+                      size: 13,
+                      color: colors.onSurfaceVariant,
+                    ),
+                    Text(
+                      lessonsCountText,
+                      style: texts.labelSmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                        fontWeight: .w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Row(
-                spacing: 4,
-                children: [
-                  Icon(
-                    Icons.play_lesson_outlined,
-                    size: 13,
-                    color: colors.onSurfaceVariant,
-                  ),
-                  Text(
-                    lessonsCountText,
-                    style: texts.labelSmall?.copyWith(
-                      color: colors.onSurfaceVariant,
-                      fontWeight: .w600,
-                    ),
-                  ),
-                ],
-              ),
             ),
-          ),
         ],
       ),
     );

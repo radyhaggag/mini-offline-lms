@@ -35,5 +35,6 @@
   "resume": "استئناف",
   "normalSpeed": "عادي (1x)",
   "courseCompleted": "أكملت جميع دروس هذه الدورة! 🎉",
-  "resumedFrom": "تم الاستئناف من {}"
+  "resumedFrom": "تم الاستئناف من {}",
+  "completeCurrentLessonFirst": "أكمل الدرس الحالي أولاً"
 }

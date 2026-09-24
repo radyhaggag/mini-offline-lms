@@ -5,6 +5,8 @@ import '../../../../core/utils/extensions/context_extensions.dart';
 import '../../../../core/utils/extensions/duration_extensions.dart';
 import '../../../courses/domain/entities/lesson.dart';
 
+import '../../../../core/widgets/app_snack_bar.dart';
+
 /// Card/button providing next lesson navigation respecting the sequential unlock policy.
 class NextLessonButton extends StatelessWidget {
   const NextLessonButton({
@@ -19,12 +21,9 @@ class NextLessonButton extends StatelessWidget {
   final ValueChanged<Lesson> onTap;
 
   void _onLockedTap(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(context.tr('lessonLocked')),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
+    AppSnackBar.showWarning(
+      context,
+      message: context.tr('completeCurrentLessonFirst'),
     );
   }
 
