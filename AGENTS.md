@@ -365,6 +365,11 @@ abstract class AppRoutes {
   - Do NOT use explicit `library` declarations.
   - Always use string URIs for `part of` directives (e.g. `part of 'my_view.dart';`).
 
+### Class-Based Widgets (Never Helper Functions)
+- Always use separate widget classes (`StatelessWidget` / `StatefulWidget`).
+- **NEVER** use helper functions or private methods returning a `Widget` (e.g. `Widget _buildSection()`, `Widget _buildItem()`).
+- Extract sub-layouts into dedicated class-based widgets in separate files to leverage Flutter's element tree caching and rebuild optimizations.
+
 ### Cubit — Grouping & Folder Structure
 
 If a feature's `cubit/` folder contains more than one Cubit, group each into its own subfolder.

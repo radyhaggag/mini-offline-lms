@@ -7,6 +7,7 @@ import '../../../features/courses/presentation/cubit/course_details/course_detai
 import '../../../features/courses/presentation/cubit/courses_list/courses_list_cubit.dart';
 import '../../../features/courses/presentation/screens/course_details_screen.dart';
 import '../../../features/courses/presentation/screens/courses_screen.dart';
+import '../../../features/notes/presentation/cubit/lesson_notes_cubit.dart';
 import '../../../features/player/presentation/cubit/player_cubit.dart';
 import '../../../features/player/presentation/screens/lesson_player_screen.dart';
 import 'app_routes.dart';
@@ -37,9 +38,17 @@ abstract class AppRouter {
         builder: (context, state) {
           final courseId = state.pathParameters['courseId'] ?? '';
           final lessonId = state.pathParameters['lessonId'] ?? '';
-          return BlocProvider(
-            create: (_) =>
-                sl<PlayerCubit>()..init(courseId: courseId, lessonId: lessonId),
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (_) =>
+                    sl<PlayerCubit>()
+                      ..init(courseId: courseId, lessonId: lessonId),
+              ),
+              BlocProvider(
+                create: (_) => sl<LessonNotesCubit>()..loadNotes(lessonId),
+              ),
+            ],
             child: LessonPlayerScreen(
               key: ValueKey('player-$courseId-$lessonId'),
               courseId: courseId,

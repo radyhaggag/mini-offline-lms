@@ -2,15 +2,12 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../core/config/router/app_routes.dart';
 import '../../../../core/config/theme/app_colors.dart';
 import '../../../../core/widgets/app_loader.dart';
 import '../cubit/player_cubit.dart';
 import '../cubit/player_state.dart';
-import '../widgets/lesson_info_section.dart';
-import '../widgets/next_lesson_button.dart';
+import '../widgets/player_loaded_body.dart';
 import '../widgets/video_error_view.dart';
 import '../widgets/video_player_view.dart';
 
@@ -92,59 +89,15 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
                 lessonId: widget.lessonId,
               ),
             ),
-            PlayerLoaded() => _buildLoadedBody(context, state),
+            PlayerLoaded() => PlayerLoadedBody(
+              state: state,
+              playerKey: _playerKey,
+              isFullscreen: _isFullscreen,
+              courseId: widget.courseId,
+              onToggleFullscreen: _toggleFullscreen,
+            ),
           },
         ),
-      ),
-    );
-  }
-
-  Widget _buildLoadedBody(BuildContext context, PlayerLoaded state) {
-    final cubit = context.read<PlayerCubit>();
-    final playerView = VideoPlayerView(
-      key: _playerKey,
-      videoAssetPath: state.lesson.video,
-      lessonTitle: state.lesson.title,
-      initialPositionSec: state.initialPositionSec,
-      playbackSpeed: state.playbackSpeed,
-      isFullscreen: _isFullscreen,
-      onProgressUpdate: (positionSeconds, totalDurationSeconds) {
-        cubit.saveProgress(
-          positionSeconds: positionSeconds,
-          totalDurationSeconds: totalDurationSeconds,
-        );
-      },
-      onSpeedChanged: cubit.setPlaybackSpeed,
-      onToggleFullscreen: _toggleFullscreen,
-    );
-
-    if (_isFullscreen) {
-      return Center(child: playerView);
-    }
-
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: .stretch,
-        children: [
-          playerView,
-          LessonInfoSection(
-            course: state.course,
-            lesson: state.lesson,
-            isCompleted: state.isCompleted,
-          ),
-          NextLessonButton(
-            nextLesson: state.nextLesson,
-            isCurrentLessonCompleted: state.isCompleted,
-            onTap: (nextLesson) async {
-              await _playerKey.currentState?.pause();
-              if (context.mounted) {
-                await context.push(
-                  AppRoutes.lessonPlayerPath(widget.courseId, nextLesson.id),
-                );
-              }
-            },
-          ),
-        ],
       ),
     );
   }

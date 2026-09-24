@@ -38,5 +38,20 @@
   "resumedFrom": "تم الاستئناف من {}",
   "completeCurrentLessonFirst": "أكمل الدرس الحالي أولاً",
   "searchCourses": "ابحث عن دورات...",
-  "noSearchResults": "لا توجد دورات تطابق بحثك"
+  "noSearchResults": "لا توجد دورات تطابق بحثك",
+  "lessonNotes": "ملاحظات الدرس",
+  "lessonNotesHint": "اكتب ملاحظاتك حول هذا الدرس هنا...",
+  "saveNote": "حفظ الملاحظة",
+  "noteSaved": "تم الحفظ",
+  "savingNote": "جارٍ الحفظ...",
+  "noteLoadError": "فشل في تحميل الملاحظات",
+  "noteSaveError": "فشل في حفظ الملاحظة",
+  "noNotesYet": "لا توجد ملاحظات لهذا الدرس. أضف واحدة!",
+  "addNote": "إضافة ملاحظة",
+  "deleteNote": "حذف",
+  "characters": "حرف",
+  "editNote": "تعديل",
+  "save": "حفظ",
+  "cancel": "إلغاء",
+  "edited": "معدّلة"
 }
