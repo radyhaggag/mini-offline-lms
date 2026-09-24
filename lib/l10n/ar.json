@@ -27,5 +27,10 @@
   "language": "اللغة",
   "arabic": "العربية",
   "english": "English",
-  "darkMode": "الوضع الداكن"
+  "darkMode": "الوضع الداكن",
+  "lightMode": "الوضع الفاتح",
+  "welcome": "مرحباً بك 👋",
+  "welcomeSubtitle": "واصل رحلتك التعليمية في العلوم الطبية",
+  "healthSciences": "علوم صحية",
+  "resume": "استئناف"
 }

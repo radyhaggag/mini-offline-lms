@@ -27,5 +27,10 @@
   "language": "Language",
   "arabic": "العربية",
   "english": "English",
-  "darkMode": "Dark Mode"
+  "darkMode": "Dark Mode",
+  "lightMode": "Light Mode",
+  "welcome": "Welcome 👋",
+  "welcomeSubtitle": "Continue your medical sciences learning journey",
+  "healthSciences": "Health Sciences",
+  "resume": "Resume"
 }
