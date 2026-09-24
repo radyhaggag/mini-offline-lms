@@ -32,5 +32,8 @@
   "welcome": "Welcome 👋",
   "welcomeSubtitle": "Continue your medical sciences learning journey",
   "healthSciences": "Health Sciences",
-  "resume": "Resume"
+  "resume": "Resume",
+  "normalSpeed": "Normal (1x)",
+  "courseCompleted": "You completed all lessons in this course! 🎉",
+  "resumedFrom": "Resumed from {}"
 }

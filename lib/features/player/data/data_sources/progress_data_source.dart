@@ -6,6 +6,8 @@ abstract class ProgressDataSource {
   int getPosition(String lessonId);
   Future<void> markCompleted(String lessonId);
   bool isCompleted(String lessonId);
+  Future<void> savePlaybackSpeed(double speed);
+  double getPlaybackSpeed();
 }
 
 /// SharedPreferences-backed implementation of [ProgressDataSource].
@@ -16,6 +18,7 @@ class ProgressLocalDataSource implements ProgressDataSource {
 
   static const _positionPrefix = 'position_';
   static const _completedPrefix = 'completed_';
+  static const _speedKey = 'preferred_playback_speed';
 
   @override
   Future<void> savePosition(String lessonId, int positionSeconds) async {
@@ -34,4 +37,12 @@ class ProgressLocalDataSource implements ProgressDataSource {
   @override
   bool isCompleted(String lessonId) =>
       _prefs.getBool('$_completedPrefix$lessonId') ?? false;
+
+  @override
+  Future<void> savePlaybackSpeed(double speed) async {
+    await _prefs.setDouble(_speedKey, speed);
+  }
+
+  @override
+  double getPlaybackSpeed() => _prefs.getDouble(_speedKey) ?? 1.0;
 }
