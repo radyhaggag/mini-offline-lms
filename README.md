@@ -22,7 +22,7 @@
 
 - [Quick Start](#-quick-start)
 - [Features](#-features)
-- [Screenshots](#-screenshots)
+- [Preview](#-preview)
 - [Tech Stack](#-tech-stack)
 - [Architecture](#-architecture)
 - [Folder Structure](#-folder-structure)
@@ -43,8 +43,8 @@
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/<your-username>/mini_offline_lms.git
-cd mini_offline_lms
+git clone https://github.com/radyhaggag/mini-offline-lms.git
+cd mini-offline-lms
 
 # 2. Install dependencies
 flutter pub get
@@ -86,10 +86,13 @@ flutter test
 
 ---
 
-## 📸 Screenshots
+## 📸 Preview
 
-<!-- Replace with actual screenshots -->
-> Add screenshots or a screen recording here showing the Courses list, Course details, Video player, Dark mode, and RTL layout.
+https://github.com/user-attachments/assets/1e620922-4918-4f1d-ba37-73af716a97a3
+
+<p align="center">
+  <sub>📱 <em>Full Walkthrough: RTL layout, course exploration, sequential unlock, 90% auto-completion, video player controls, notes CRUD, search, and dark mode.</em></sub>
+</p>
 
 ---
 
